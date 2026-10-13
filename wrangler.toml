@@ -11,8 +11,9 @@ directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/api/*"]
 
-[vars]
-APP_ENV = "local"
+# No APP_ENV here: a deploy that skips --env (such as a Cloudflare dashboard build) is
+# treated as production, so it can never put a test banner on the live site.
+# `npm run dev` sets APP_ENV=local for your own machine.
 
 # ---------- dev ----------
 [env.dev]
