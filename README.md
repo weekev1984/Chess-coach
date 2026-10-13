@@ -6,6 +6,7 @@ A chess board for learning. You play against a coach at five levels (Pawn to Que
 - **Coaching for each opening family**: what it is, each side's plan, how to counter it, and a tip or trap. About 90 families have their own notes, and the rest get notes for their ECO group (A to E).
 - **Two-step hints**: first a nudge, then the exact move with the reason.
 - **Mistake warnings**: before a big blunder, the coach shows the punishing reply and offers a take-back. It also points out pieces in danger and checkmate threats.
+- **Lessons**: 22 short lessons with 62 exercises played on the board, from reading your opponent and opening rules through the big openings, tactics (forks, pins, skewers, discovered attacks), mating patterns, middlegame plans and endgames. Progress is kept in the browser.
 - **Openings library**: search all 3,865 openings and start a practice game from any of them.
 - **"Name that opening" quiz.**
 
@@ -18,6 +19,8 @@ Everything runs in the browser. The Cloudflare Worker serves the static site plu
   public/app.js         board, coaching, hints, library and quiz
   public/engine.js      the coach's chess engine (alpha-beta search), run in a Web Worker
   public/coach.js       kid-friendly notes for each opening family
+  public/notation.js    turns move notation ("Nf3") into plain words ("knight to f3") for beginners
+  public/lessons.js     lessons and their exercises (test/lessons.test.js checks every answer with the engine)
   public/openings.json  [ECO, name, moves, position] for every opening
   public/vendor/        chess.js (rules and move notation, BSD-2)
   public/pieces/        cburnett piece set (GPLv2+)

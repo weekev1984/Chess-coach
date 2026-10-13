@@ -56,9 +56,11 @@ let messages = [];
 let previewArrow = null;
 let gameOverShown = false;
 let lastThreat = '';
+let lesson = null;       // the open lesson exercise; while set, the board belongs to the Lessons tab
 
 const opt = id => $(id).checked;
 function save() {
+  if (lesson) return;
   try { localStorage.setItem('knight-school', JSON.stringify({ moves: game.history(), playerColor, level, flipped, warn: opt('opt-warn'), threat: opt('opt-threat'), ev: opt('opt-eval') })); } catch (e) {}
 }
 function restore() {
@@ -143,6 +145,7 @@ function drawArrows() {
   const list = [];
   if (hintStage === 2 && hintData && hintData.fen === game.fen()) list.push({ from: hintData.move.from, to: hintData.move.to, color: 'blue' });
   if (previewArrow) list.push(previewArrow);
+  if (lesson) for (const a of lesson.arrows) list.push({ from: a.slice(0, 2), to: a.slice(2, 4), color: 'gold' });
   for (const a of list) {
     const [x1, y1] = squareXY(a.from), [x2, y2] = squareXY(a.to);
     const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
@@ -158,6 +161,7 @@ function drawArrows() {
 function renderStatus() {
   const s = $('status');
   const turn = game.turn();
+  if (lesson) { s.innerHTML = `<span class="pip ${turn}"></span><span>${lessonStatus()}</span>`; return; }
   let text;
   if (game.isCheckmate()) text = turn === playerColor ? 'Checkmate. The coach wins this one.' : 'Checkmate! You win!';
   else if (game.isStalemate()) text = 'Stalemate. It\'s a draw.';
@@ -220,7 +224,7 @@ function endDrag(e) {
 board.addEventListener('pointerup', endDrag);
 board.addEventListener('pointercancel', e => { if (drag) { drag.img.remove(); drag = null; render(); } });
 
-function canMove() { return game.turn() === playerColor && !game.isGameOver() && !busy && !pendingConfirm; }
+function canMove() { if (lesson) return lesson.state === 'play' && game.turn() === playerColor; return game.turn() === playerColor && !game.isGameOver() && !busy && !pendingConfirm; }
 function tryMove(from, to) {
   const legal = game.moves({ square: from, verbose: true }).filter(m => m.to === to);
   if (!legal.length) return false;
@@ -250,7 +254,7 @@ function renderMsgs() {
   messages.forEach((m, i) => {
     const d = document.createElement('div');
     d.className = `msg ${m.kind}${i > 0 ? ' old' : ''}`;
-    d.innerHTML = `<span class="tag">${m.tag}</span>${m.html}`;
+    d.innerHTML = plainMoves(`<span class="tag">${m.tag}</span>${m.html}`);
     if (m.acts && i === 0) {
       const a = document.createElement('div'); a.className = 'acts';
       for (const [label, fn, primary] of m.acts) { const b = document.createElement('button'); b.className = 'btn' + (primary ? ' primary' : ''); b.textContent = label; b.onclick = fn; a.appendChild(b); }
@@ -259,7 +263,7 @@ function renderMsgs() {
     el.appendChild(d);
   });
 }
-const sqName = s => `<span class="san">${s}</span>`;
+const sqName = s => `<span class="sqn">${s}</span>`;
 const sanTag = s => `<span class="san">${s}</span>`;
 
 // ---------- Move explanation ----------
@@ -371,7 +375,7 @@ function renderOpening() {
     html += bm.slice(0, 8).map((b, i) => `<button data-bk="${i}"><span class="san">${b.m.san}</span><span class="bn">${b.o.name.replace(/^[^:]*: ?/, '') || b.o.name}</span></button>`).join('');
     html += '</div></div>';
   }
-  card.innerHTML = html;
+  card.innerHTML = plainMoves(html);
   card.querySelectorAll('[data-bk]').forEach(b => b.onclick = () => {
     const x = bm[+b.dataset.bk];
     previewArrow = { from: x.m.from, to: x.m.to, color: 'gold' };
@@ -400,7 +404,7 @@ function renderSheet() {
     for (const j of [i, i + 1]) {
       if (j >= hist.length) { html += '<div></div>'; continue; }
       const cls = [inBookPly(j + 1) ? 'bk' : '', j === hist.length - 1 ? 'cur' : ''].join(' ');
-      html += `<div class="${cls}">${hist[j]}</div>`;
+      html += `<div class="${cls}">${moveWords(hist[j])}</div>`;
     }
   }
   el.innerHTML = html || '<div class="n">1.</div><div class="muted">…</div><div></div>';
@@ -429,6 +433,7 @@ function startPreAnalysis() {
   return pre.get(fen);
 }
 async function playerMove(m) {
+  if (lesson) return lessonMove(m);
   const fenBefore = game.fen();
   const analysis = pre.get(fenBefore);
   let mv;
@@ -591,7 +596,7 @@ function newGame(moves = [], color = playerColor) {
 }
 function setColorButtons() { $('col-w').setAttribute('aria-pressed', playerColor === 'w'); $('col-b').setAttribute('aria-pressed', playerColor === 'b'); }
 
-$('new-game').onclick = () => newGame([], playerColor);
+$('new-game').onclick = () => { if (lesson) showTab('tab-coach'); newGame([], playerColor); };
 $('col-w').onclick = () => { playerColor = 'w'; setColorButtons(); };
 $('col-b').onclick = () => { playerColor = 'b'; setColorButtons(); };
 $('level').onchange = () => { level = +$('level').value; save(); };
@@ -602,8 +607,10 @@ $('threat-btn').onclick = () => threatCheck(true);
 for (const id of ['opt-warn', 'opt-threat', 'opt-eval']) $(id).onchange = () => { renderEval(); save(); };
 
 // ---------- Tabs ----------
-const TABS = [['tab-coach', 'pane-coach'], ['tab-lib', 'pane-lib'], ['tab-quiz', 'pane-quiz']];
+const TABS = [['tab-coach', 'pane-coach'], ['tab-lessons', 'pane-lessons'], ['tab-lib', 'pane-lib'], ['tab-quiz', 'pane-quiz']];
 function showTab(id) {
+  if (lesson && id !== 'tab-lessons') exitLesson();
+  if (id === 'tab-lessons') renderLesson();
   for (const [t, p] of TABS) { $(t).setAttribute('aria-selected', t === id); $(p).hidden = t !== id; }
   if (id === 'tab-quiz' && !quiz) nextQuiz();
   try { localStorage.setItem('knight-school-tab', id); } catch (e) {}
@@ -631,11 +638,11 @@ function showLib(i) {
   const o = OPENINGS[i];
   const { fam, info, general } = coachFor(o);
   const moves = o.moves.split(' ');
-  const pretty = moves.map((m, k) => (k % 2 === 0 ? `${k / 2 + 1}.` : '') + m).join(' ');
-  $('lib-detail').innerHTML = `<div class="ocard"><span class="eyebrow">${o.eco} · ${fam}</span><h3>${o.name}</h3><div class="moves">${pretty}</div>
+  const pretty = lineWords(moves.join(' '));
+  $('lib-detail').innerHTML = plainMoves(`<div class="ocard"><span class="eyebrow">${o.eco} · ${fam}</span><h3>${o.name}</h3><div class="moves">${pretty}</div>
     <dl><dt>What is it?</dt><dd>${info ? info.s : general.s}</dd>
     ${info ? `<dt>White's plan</dt><dd>${info.w}</dd><dt>Black's plan</dt><dd>${info.b}</dd><dt>How to counter it</dt><dd class="counter">${info.c}</dd><dt>Coach's tip</dt><dd>${info.t}</dd>` : `<dt>How to play it</dt><dd class="counter">${general.c}</dd>`}</dl>
-    <div class="controls"><button class="btn primary" id="lib-pw">Practice as White</button><button class="btn" id="lib-pb">Practice as Black</button></div></div>`;
+    <div class="controls"><button class="btn primary" id="lib-pw">Practice as White</button><button class="btn" id="lib-pb">Practice as Black</button></div></div>`);
   $('lib-pw').onclick = () => { newGame(moves, 'w'); showTab('tab-coach'); };
   $('lib-pb').onclick = () => { newGame(moves, 'b'); showTab('tab-coach'); };
   $('lib-results').querySelectorAll('button').forEach(b => b.setAttribute('aria-current', +b.dataset.i === i));
@@ -670,7 +677,7 @@ function nextQuiz() {
     mini.appendChild(d);
   }
   const ms = o.moves.split(' ');
-  $('q-moves').textContent = ms.map((m, k) => (k % 2 === 0 ? `${k / 2 + 1}.` : '') + m).join(' ');
+  $('q-moves').textContent = lineWords(ms.join(' '));
   $('q-choices').innerHTML = choices.map(c => `<button>${c}</button>`).join('');
   $('q-choices').querySelectorAll('button').forEach(b => b.onclick = () => answerQuiz(b));
   $('q-feedback').innerHTML = '';
@@ -683,9 +690,191 @@ function answerQuiz(btn) {
   $('q-right').textContent = qs.right; $('q-total').textContent = qs.total; $('q-streak').textContent = qs.streak;
   $('q-choices').querySelectorAll('button').forEach(b => { if (b.textContent === quiz.fam) b.classList.add('right'); else if (b === btn) b.classList.add('wrong'); });
   const info = COACH[quiz.fam];
-  $('q-feedback').innerHTML = `<div class="msg ${ok ? 'good' : 'bad'}"><span class="tag">${ok ? 'Correct!' : 'Not quite'}</span><p>This is the <b>${quiz.o.name}</b> (${quiz.o.eco}).</p><p>${info.s}</p></div>`;
+  $('q-feedback').innerHTML = plainMoves(`<div class="msg ${ok ? 'good' : 'bad'}"><span class="tag">${ok ? 'Correct!' : 'Not quite'}</span><p>This is the <b>${quiz.o.name}</b> (${quiz.o.eco}).</p><p>${info.s}</p></div>`);
 }
 $('q-next').onclick = nextQuiz;
+
+// ---------- Lessons ----------
+// An open lesson borrows the board: the current game is stashed and comes back when you leave the Lessons tab.
+const LESSON_LIST = LESSONS.flatMap(u => u.lessons.map(l => ({ ...l, unit: u.unit })));
+const EX_TOTAL = LESSON_LIST.reduce((n, l) => n + l.ex.length, 0);
+let lessonDone = {};
+try { lessonDone = JSON.parse(localStorage.getItem('knight-school-lessons') || '{}') || {}; } catch (e) {}
+const exId = (l, i) => `${l.id}-${i}`;
+const doneCount = l => l.ex.filter((_, i) => lessonDone[exId(l, i)]).length;
+const cleanSan = s => s.replace(/[+#!?]/g, '');
+const curLesson = () => LESSON_LIST[lesson.li];
+const curEx = () => curLesson().ex[lesson.ei];
+const sideName = c => c === 'w' ? 'White' : 'Black';
+
+function openLesson(li, ei) {
+  if (!lesson) {
+    messages.forEach(m => m.acts = null); renderMsgs();
+    lesson = { stash: { moves: game.history(), playerColor, flipped } };
+    document.body.classList.add('in-lesson');
+  }
+  const L = LESSON_LIST[li];
+  lesson.li = li;
+  lesson.ei = ei ?? Math.max(0, L.ex.findIndex((_, i) => !lessonDone[exId(L, i)]));
+  startExercise();
+}
+function startExercise() {
+  const ex = curEx();
+  token++; busy = false; pendingConfirm = null;
+  game = new Chess(ex.fen);
+  for (const m of (ex.setup || '').split(' ').filter(Boolean)) game.move(m);
+  fens = [game.fen()];
+  playerColor = game.turn(); flipped = playerColor === 'b';
+  Object.assign(lesson, { step: 0, state: ex.type === 'choice' ? 'choice' : 'play', hint: 0, msg: null, arrows: [], wrongOpts: [] });
+  selected = null; hintSquare = null; previewArrow = null;
+  $('opening-strip').innerHTML = `<span class="eco">Lesson</span><span class="opening-name">${curLesson().title}</span>`;
+  render(); renderLesson();
+}
+function exitLesson() {
+  const s = lesson.stash;
+  lesson = null; token++;
+  document.body.classList.remove('in-lesson');
+  playerColor = s.playerColor; flipped = s.flipped;
+  setColorButtons();
+  game = new Chess(); fens = [game.fen()];
+  for (const m of s.moves) { game.move(m); fens.push(game.fen()); }
+  afterChange();
+  if (!game.isGameOver()) { if (game.turn() !== playerColor) aiMove(); else startPreAnalysis(); }
+}
+function lessonStatus() {
+  const st = lesson.state;
+  if (st === 'choice') return 'Study the board, then answer the question';
+  if (st === 'reply') return 'Good! Now watch the reply…';
+  if (st === 'wrong') return 'Not that one. Try again!';
+  if (st === 'done') return 'Solved!';
+  return `${sideName(playerColor)} to move. Your turn!`;
+}
+function expectedMove() {
+  const want = curEx().solution[lesson.step].split('|')[0];
+  return new Chess(game.fen()).move(want);
+}
+function lessonMove(m) {
+  const ex = curEx();
+  let mv; try { mv = game.move(m); } catch (e) { return; }
+  selected = null; hintSquare = null; previewArrow = null;
+  const want = ex.solution[lesson.step].split('|');
+  const last = lesson.step === ex.solution.length - 1;
+  const ok = want.some(w => cleanSan(w) === cleanSan(mv.san)) || (ex.goal === 'mate' && last && game.isCheckmate());
+  const t = token;
+  if (!ok) {
+    lesson.state = 'wrong';
+    let why = 'Not quite. Ask the 3 questions (what is attacked, what is threatened, what changed), then try again.';
+    if (game.isStalemate()) why = `${sanTag(mv.san)} is <b>stalemate</b>: the king isn't in check but has no legal move, so it's a draw. Give check instead!`;
+    else if (ex.type === 'line') {
+      const o = BY_EPD.get(epdOf(game.fen()));
+      why = o ? `${sanTag(mv.san)} is a real opening move too (${o.name}), but this lesson practises a different main line. Try again!` : `${sanTag(mv.san)} isn't the main-line move here. Try again, or press <b>Hint</b>.`;
+    } else if (ex.goal === 'mate' && game.inCheck()) why = `${sanTag(mv.san)} is check, but the king can escape. Look for a check with no way out.`;
+    lesson.msg = ['bad', 'Try again', why];
+    render(); renderLesson();
+    setTimeout(() => { if (t !== token || !lesson) return; game.undo(); lesson.state = 'play'; render(); renderLesson(); }, 1200);
+    return;
+  }
+  lesson.step++; lesson.hint = 0;
+  if (lesson.step >= ex.solution.length) return solveExercise();
+  lesson.state = 'reply';
+  const o = ex.type === 'line' ? BY_EPD.get(epdOf(game.fen())) : null;
+  lesson.msg = ['good', 'Correct', o ? `${sanTag(mv.san)}. You're in the <b>${o.name}</b>.` : `${sanTag(mv.san)} is right. Keep going!`];
+  render(); renderLesson();
+  setTimeout(() => {
+    if (t !== token || !lesson) return;
+    game.move(ex.solution[lesson.step]);
+    lesson.step++; lesson.state = 'play';
+    render(); renderLesson();
+  }, 700);
+}
+function solveExercise() {
+  const L = curLesson(), ex = curEx();
+  lesson.state = 'done';
+  lesson.arrows = ex.arrows || [];
+  lesson.msg = ['good', game.isCheckmate() ? 'Checkmate!' : 'Well done!', ex.explain || ''];
+  lessonDone[exId(L, lesson.ei)] = true;
+  try { localStorage.setItem('knight-school-lessons', JSON.stringify(lessonDone)); } catch (e) {}
+  render(); renderLesson();
+}
+function answerChoice(k) {
+  const ex = curEx();
+  if (lesson.state !== 'choice') return;
+  if (k === ex.answer) return solveExercise();
+  lesson.wrongOpts.push(k);
+  lesson.msg = ['bad', 'Not quite', 'Look at the board again and try another answer.'];
+  renderLesson();
+}
+function lessonHint() {
+  if (lesson.state !== 'play') return;
+  const ex = curEx(), m = expectedMove();
+  lesson.hint++;
+  if (lesson.hint === 1) {
+    hintSquare = m.from;
+    lesson.msg = ['hint', 'Hint', `${ex.hint && lesson.step === 0 ? ex.hint : `Look at your ${NAMES[m.piece]} on ${sqName(m.from)}.`}`];
+  } else {
+    hintSquare = null;
+    previewArrow = { from: m.from, to: m.to, color: 'blue' };
+    lesson.msg = ['hint', 'The move', `Play ${sanTag(m.san)}.`];
+  }
+  render(); renderLesson();
+}
+function renderLesson() {
+  const el = $('pane-lessons');
+  if (!lesson) {
+    const done = LESSON_LIST.reduce((n, l) => n + doneCount(l), 0);
+    let html = `<div><h2 class="section-title">Lessons</h2><p class="muted small" style="margin:4px 0 0">Short lessons with puzzles on the board, from opening basics to endgames. Start at the top or jump to any topic.</p></div>
+      <div class="lesson-meter"><div style="width:${(100 * done / EX_TOTAL).toFixed(1)}%"></div></div><p class="small muted" style="margin:-10px 0 0">${done} of ${EX_TOTAL} exercises solved</p>`;
+    let li = 0;
+    for (const u of LESSONS) {
+      html += `<section class="unit"><span class="eyebrow">${u.unit}</span><div class="lesson-list">`;
+      for (const l of u.lessons) {
+        const d = doneCount(l), all = d === l.ex.length;
+        html += `<button data-li="${li++}"${all ? ' class="all"' : ''}><span class="lt">${l.title}</span><span class="lp">${all ? '✓ ' : ''}${d}/${l.ex.length}</span></button>`;
+      }
+      html += '</div></section>';
+    }
+    el.innerHTML = html;
+    el.querySelectorAll('[data-li]').forEach(b => b.onclick = () => openLesson(+b.dataset.li));
+    return;
+  }
+  const L = curLesson(), ex = curEx(), st = lesson.state;
+  const dots = L.ex.map((_, i) => `<button data-ei="${i}" class="${lessonDone[exId(L, i)] ? 'done' : ''}${i === lesson.ei ? ' cur' : ''}" aria-label="Exercise ${i + 1}"></button>`).join('');
+  let html = `<div class="lesson-head"><button class="btn ghost" id="ls-back">← All lessons</button><div class="dots">${dots}</div></div>
+    <div><span class="eyebrow">${L.unit}</span><h2 class="section-title" style="font-size:1.25rem">${L.title}</h2></div>
+    <details class="lesson-intro"${lesson.ei === 0 ? ' open' : ''}><summary>The big idea</summary>${L.intro.map(p => `<p>${p}</p>`).join('')}</details>
+    <div class="ocard"><span class="eyebrow">Exercise ${lesson.ei + 1} of ${L.ex.length}</span><p style="margin:0">${ex.prompt}</p>`;
+  if (ex.type === 'line') {
+    const moves = game.history();
+    html += `<div class="moves">${lineWords(moves.join(' ')) || '…'}</div>`;
+  }
+  if (ex.type === 'choice') {
+    html += `<div class="choices">${ex.options.map((o, k) => `<button data-k="${k}" class="${st === 'done' && k === ex.answer ? 'right' : lesson.wrongOpts.includes(k) ? 'wrong' : ''}"${st === 'done' ? ' disabled' : ''}>${o}</button>`).join('')}</div>`;
+  }
+  html += '</div>';
+  if (lesson.msg) html += `<div class="msg ${lesson.msg[0]}"><span class="tag">${lesson.msg[1]}</span><p>${lesson.msg[2]}</p></div>`;
+  const nextLabel = lesson.ei < L.ex.length - 1 ? 'Next exercise' : lesson.li < LESSON_LIST.length - 1 ? 'Next lesson' : 'All lessons';
+  html += '<div class="controls">';
+  if (st === 'done') html += `<button class="btn primary" id="ls-next">${nextLabel} →</button><button class="btn" id="ls-retry">Do it again</button>`;
+  else {
+    if (ex.type !== 'choice') html += `<button class="btn primary" id="ls-hint"${st !== 'play' || lesson.hint > 1 ? ' disabled' : ''}>${lesson.hint ? 'Show the move' : 'Hint'}</button><button class="btn" id="ls-retry">Start over</button>`;
+    html += `<button class="btn ghost" id="ls-skip">Skip</button>`;
+  }
+  html += '</div>';
+  el.innerHTML = plainMoves(html);
+  $('ls-back').onclick = () => exitLessonToList();
+  el.querySelectorAll('[data-ei]').forEach(b => b.onclick = () => { lesson.ei = +b.dataset.ei; startExercise(); });
+  el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => answerChoice(+b.dataset.k));
+  if ($('ls-hint')) $('ls-hint').onclick = lessonHint;
+  if ($('ls-retry')) $('ls-retry').onclick = startExercise;
+  const advance = () => {
+    if (lesson.ei < L.ex.length - 1) { lesson.ei++; startExercise(); }
+    else if (lesson.li < LESSON_LIST.length - 1) openLesson(lesson.li + 1, 0);
+    else exitLessonToList();
+  };
+  if ($('ls-next')) $('ls-next').onclick = advance;
+  if ($('ls-skip')) $('ls-skip').onclick = advance;
+}
+function exitLessonToList() { exitLesson(); renderLesson(); }
 
 // ---------- Boot ----------
 const restored = restore();
