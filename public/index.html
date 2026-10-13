@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Knight School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div id="env-banner" hidden></div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img id="brand-knight" alt="">
+      <div>
+        <h1>Knight School</h1>
+        <p>Play the coach, learn the openings, get better every game.</p>
+      </div>
+    </div>
+    <div class="setup">
+      <div class="field">
+        <label for="level">Opponent</label>
+        <select id="level">
+          <option value="1">Pawn · just learning</option>
+          <option value="2" selected>Knight · easy</option>
+          <option value="3">Bishop · medium</option>
+          <option value="4">Rook · hard</option>
+          <option value="5">Queen · strongest</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="eyebrow" id="color-label">Play as</span>
+        <div class="seg" role="group" aria-labelledby="color-label">
+          <button id="col-w" aria-pressed="true">White</button>
+          <button id="col-b" aria-pressed="false">Black</button>
+        </div>
+      </div>
+      <button class="btn primary" id="new-game">New game</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board-col">
+      <div class="opening-strip" id="opening-strip"></div>
+      <div class="board-row">
+        <div class="evalbar" id="evalbar" title="Who is ahead"><div class="fill" id="evalfill"></div></div>
+        <div class="board" id="board">
+          <div class="squares" id="squares"></div>
+          <svg class="arrows" id="arrows" viewBox="0 0 800 800" aria-hidden="true">
+            <defs>
+              <marker id="ah-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2a7bd8"/></marker>
+              <marker id="ah-gold" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e0a200"/></marker>
+              <marker id="ah-red" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d23a30"/></marker>
+            </defs>
+            <g id="arrow-layer"></g>
+          </svg>
+          <div class="promo" id="promo" hidden><div class="box"><span class="eyebrow">Promote to</span><div class="row" id="promo-row"></div></div></div>
+        </div>
+      </div>
+      <div class="statusline" id="status"></div>
+      <div class="controls">
+        <button class="btn primary" id="hint-btn">Hint</button>
+        <button class="btn" id="undo-btn">Take back</button>
+        <button class="btn" id="flip-btn">Flip board</button>
+        <button class="btn ghost" id="threat-btn">What's my opponent up to?</button>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-coach" aria-selected="true" aria-controls="pane-coach">Coach</button>
+        <button role="tab" id="tab-lib" aria-selected="false" aria-controls="pane-lib">Openings</button>
+        <button role="tab" id="tab-quiz" aria-selected="false" aria-controls="pane-quiz">Quiz</button>
+      </div>
+
+      <div class="tabpane" id="pane-coach" role="tabpanel">
+        <div class="msgs" id="msgs"></div>
+        <div id="opening-card"></div>
+        <div>
+          <h2 class="section-title" style="margin-bottom:6px">Scoresheet</h2>
+          <div class="sheet" id="sheet"></div>
+          <p class="legend" style="margin:6px 0 0">Underlined moves like <span>Nf3</span> are known opening (“book”) moves.</p>
+        </div>
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" id="opt-warn" checked> Warn me before I make a big mistake</label>
+          <label class="toggle"><input type="checkbox" id="opt-threat" checked> Tell me when a piece is in danger</label>
+          <label class="toggle"><input type="checkbox" id="opt-eval" checked> Show who is ahead (the bar beside the board)</label>
+        </div>
+      </div>
+
+      <div class="tabpane" id="pane-lib" role="tabpanel" hidden>
+        <div class="field">
+          <label for="lib-search">Search <span id="lib-count"></span> openings</label>
+          <input type="search" id="lib-search" placeholder="Try “Sicilian”, “gambit” or “C50”" autocomplete="off">
+        </div>
+        <div class="chips" id="lib-chips"></div>
+        <div class="results" id="lib-results"></div>
+        <div id="lib-detail"></div>
+      </div>
+
+      <div class="tabpane" id="pane-quiz" role="tabpanel" hidden>
+        <div>
+          <h2 class="section-title">Name that opening</h2>
+          <p class="muted small" style="margin:4px 0 0">Look at the moves and the position. Which opening family is it?</p>
+        </div>
+        <div class="score"><div><b id="q-right">0</b>correct</div><div><b id="q-total">0</b>tried</div><div><b id="q-streak">0</b>streak</div></div>
+        <div class="mini" id="q-board"></div>
+        <div class="ocard"><div class="moves" id="q-moves"></div></div>
+        <div class="choices" id="q-choices"></div>
+        <div id="q-feedback"></div>
+        <button class="btn" id="q-next">Next question</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    Opening names come from the lichess.org chess-openings collection (3,865 named lines, CC0). Piece set “cburnett” by Colin M.L. Burnett (GPLv2+). Rules by chess.js. The coach's engine runs right here in your browser.
+  </footer>
+</div>
+<script src="/engine.js"></script>
+<script src="/coach.js"></script>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
