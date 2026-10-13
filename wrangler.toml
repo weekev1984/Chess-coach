@@ -17,9 +17,11 @@ APP_ENV = "local"
 # ---------- dev ----------
 [env.dev]
 name = "chess-coach-dev"
+workers_dev = true
 vars = { APP_ENV = "dev" }
 
 # ---------- production ----------
 [env.production]
 name = "chess-coach"
+workers_dev = true
 vars = { APP_ENV = "production" }
