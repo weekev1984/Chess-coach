@@ -52,6 +52,11 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+      - name: Show which Cloudflare account the keys reach
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: |
+          # Account name and token permissions only; no secrets are printed
+          npx wrangler whoami 2>&1 | grep -vE '^\s*$|telemetry|⛅|─' | head -10 | while IFS= read -r line; do echo "::notice title=keys::$line"; done
       - name: Deploy
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         id: deploy
@@ -100,6 +105,11 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+      - name: Show which Cloudflare account the keys reach
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: |
+          # Account name and token permissions only; no secrets are printed
+          npx wrangler whoami 2>&1 | grep -vE '^\s*$|telemetry|⛅|─' | head -10 | while IFS= read -r line; do echo "::notice title=keys::$line"; done
       - name: Deploy
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         id: deploy
