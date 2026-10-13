@@ -33,8 +33,8 @@ Everything runs in the browser. The Cloudflare Worker serves the static site plu
 | Environment | Branch    | Worker            |
 |-------------|-----------|-------------------|
 | local       | any       | `wrangler dev`    |
-| dev         | `develop` | `chess-coach-dev` |
-| production  | `main`    | `chess-coach`     |
+| dev         | `develop` | `knight-school-dev` |
+| production  | `main`    | `knight-school`     |
 
 Non-production environments show a striped banner so you always know which one you're in.
 

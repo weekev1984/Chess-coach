@@ -2,7 +2,7 @@
 # Each environment is its own Worker with its own URL, so testing in dev never touches production.
 # The app has no database: games and settings are kept in each player's own browser.
 
-name = "chess-coach-local"
+name = "knight-school-local"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
 
@@ -16,12 +16,12 @@ APP_ENV = "local"
 
 # ---------- dev ----------
 [env.dev]
-name = "chess-coach-dev"
+name = "knight-school-dev"
 workers_dev = true
 vars = { APP_ENV = "dev" }
 
 # ---------- production ----------
 [env.production]
-name = "chess-coach"
+name = "knight-school"
 workers_dev = true
 vars = { APP_ENV = "production" }
