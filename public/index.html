@@ -72,6 +72,7 @@
     <aside class="panel">
       <div class="tabs" role="tablist">
         <button role="tab" id="tab-coach" aria-selected="true" aria-controls="pane-coach">Coach</button>
+        <button role="tab" id="tab-lessons" aria-selected="false" aria-controls="pane-lessons">Lessons</button>
         <button role="tab" id="tab-lib" aria-selected="false" aria-controls="pane-lib">Openings</button>
         <button role="tab" id="tab-quiz" aria-selected="false" aria-controls="pane-quiz">Quiz</button>
       </div>
@@ -90,6 +91,8 @@
           <label class="toggle"><input type="checkbox" id="opt-eval" checked> Show who is ahead (the bar beside the board)</label>
         </div>
       </div>
+
+      <div class="tabpane" id="pane-lessons" role="tabpanel" hidden></div>
 
       <div class="tabpane" id="pane-lib" role="tabpanel" hidden>
         <div class="field">
@@ -122,6 +125,7 @@
 </div>
 <script src="/engine.js"></script>
 <script src="/coach.js"></script>
+<script src="/lessons.js"></script>
 <script type="module" src="/app.js"></script>
 </body>
 </html>

@@ -194,6 +194,30 @@ select, input[type="search"] { background: var(--surface); border: 1px solid var
 .score { display: flex; gap: 16px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .score b { font-size: 1.3rem; display: block; font-family: var(--font-display); }
 
+/* Lessons */
+.in-lesson .board-col > .controls { display: none; }
+.in-lesson .evalbar { visibility: hidden; }
+.lesson-meter { height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.lesson-meter div { height: 100%; background: var(--good); }
+.unit { display: flex; flex-direction: column; gap: 6px; }
+.lesson-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.lesson-list button { display: flex; justify-content: space-between; gap: 10px; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 9px 12px; }
+.lesson-list button:last-child { border-bottom: 0; }
+.lesson-list button:hover { background: var(--accent-soft); }
+.lesson-list .lt { font-weight: 700; }
+.lesson-list .lp { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.lesson-list button.all .lp { color: var(--good); font-weight: 600; }
+.lesson-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.lesson-head .btn { padding-inline: 8px; }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dots button { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; padding: 0; }
+.dots button.done { background: var(--good); border-color: var(--good); }
+.dots button.cur { outline: 3px solid var(--accent); outline-offset: 1px; }
+.lesson-intro { border-radius: var(--radius); background: var(--accent-soft); padding: 10px 12px; }
+.lesson-intro summary { font-weight: 700; cursor: pointer; }
+.lesson-intro p { margin: 8px 0 0; }
+.choices button:disabled { cursor: default; opacity: 1; }
+
 footer { margin-top: 28px; color: var(--muted); font-size: .8rem; max-width: 70ch; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media (max-width: 520px) { .brand h1 { font-size: 1.5rem; } .tabs button { font-size: .92rem; padding: 10px 4px; } }
