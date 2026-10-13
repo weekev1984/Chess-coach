@@ -56,8 +56,11 @@ jobs:
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         id: deploy
         run: |
-          npx wrangler deploy --env dev | tee deploy.log
+          npx wrangler deploy --env dev 2>&1 | tee deploy.log
           url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          # Show what Cloudflare said, and fail loudly if the site didn't get a web address
+          while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -8)
+          if [ -z "$url" ]; then echo "::error::Deployed, but Cloudflare didn't report a workers.dev address. See the wrangler notices above."; exit 1; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
             echo "### Knight School (development) is live"
@@ -98,8 +101,11 @@ jobs:
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         id: deploy
         run: |
-          npx wrangler deploy --env production | tee deploy.log
+          npx wrangler deploy --env production 2>&1 | tee deploy.log
           url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          # Show what Cloudflare said, and fail loudly if the site didn't get a web address
+          while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -8)
+          if [ -z "$url" ]; then echo "::error::Deployed, but Cloudflare didn't report a workers.dev address. See the wrangler notices above."; exit 1; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
             echo "### Knight School (production) is live"
