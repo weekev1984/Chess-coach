@@ -145,11 +145,11 @@ select, input[type="search"] { background: var(--surface); border: 1px solid var
 .msg.open { background: var(--accent-soft); border-left-color: var(--accent); } .msg.open .tag { color: var(--ink); }
 .msg.info { border-left-color: var(--ink); }
 .msg.old { opacity: .62; }
-.san { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+.sqn, .san { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
 
 .ocard { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .ocard h3 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; text-wrap: balance; }
-.ocard .moves { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+.ocard .moves { font-size: .9rem; color: var(--muted); overflow-wrap: anywhere; }
 .ocard dl { margin: 0; display: grid; gap: 6px; }
 .ocard dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; }
 .ocard dd { margin: 0; }
@@ -162,7 +162,7 @@ select, input[type="search"] { background: var(--surface); border: 1px solid var
 .muted { color: var(--muted); }
 .small { font-size: .88rem; }
 
-.sheet { font-family: var(--font-mono); font-size: .9rem; display: grid; grid-template-columns: 2.6em 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-height: 240px; overflow-y: auto; }
+.sheet { font-size: .85rem; display: grid; grid-template-columns: 2.6em 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-height: 240px; overflow-y: auto; }
 .sheet div { padding: 3px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .sheet .n { color: var(--muted); background: var(--surface-2); text-align: right; }
 .sheet .bk { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 3px; }
@@ -193,6 +193,30 @@ select, input[type="search"] { background: var(--surface); border: 1px solid var
 .choices button.wrong { background: var(--bad-soft); border-color: var(--bad); }
 .score { display: flex; gap: 16px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .score b { font-size: 1.3rem; display: block; font-family: var(--font-display); }
+
+/* Lessons */
+.in-lesson .board-col > .controls { display: none; }
+.in-lesson .evalbar { visibility: hidden; }
+.lesson-meter { height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.lesson-meter div { height: 100%; background: var(--good); }
+.unit { display: flex; flex-direction: column; gap: 6px; }
+.lesson-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.lesson-list button { display: flex; justify-content: space-between; gap: 10px; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 9px 12px; }
+.lesson-list button:last-child { border-bottom: 0; }
+.lesson-list button:hover { background: var(--accent-soft); }
+.lesson-list .lt { font-weight: 700; }
+.lesson-list .lp { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.lesson-list button.all .lp { color: var(--good); font-weight: 600; }
+.lesson-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.lesson-head .btn { padding-inline: 8px; }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dots button { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; padding: 0; }
+.dots button.done { background: var(--good); border-color: var(--good); }
+.dots button.cur { outline: 3px solid var(--accent); outline-offset: 1px; }
+.lesson-intro { border-radius: var(--radius); background: var(--accent-soft); padding: 10px 12px; }
+.lesson-intro summary { font-weight: 700; cursor: pointer; }
+.lesson-intro p { margin: 8px 0 0; }
+.choices button:disabled { cursor: default; opacity: 1; }
 
 footer { margin-top: 28px; color: var(--muted); font-size: .8rem; max-width: 70ch; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
