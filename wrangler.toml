@@ -1,0 +1,25 @@
+# Cloudflare Worker config with separate dev and production environments.
+# Each environment is its own Worker with its own URL, so testing in dev never touches production.
+# The app has no database: games and settings are kept in each player's own browser.
+
+name = "chess-coach-local"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+[vars]
+APP_ENV = "local"
+
+# ---------- dev ----------
+[env.dev]
+name = "chess-coach-dev"
+vars = { APP_ENV = "dev" }
+
+# ---------- production ----------
+[env.production]
+name = "chess-coach"
+vars = { APP_ENV = "production" }

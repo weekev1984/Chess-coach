@@ -1,0 +1,20 @@
+{
+  "name": "chess-coach",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Knight School: play chess against a coach that names and explains every opening.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "node --test test/*.test.js",
+    "openings": "node scripts/build-openings.mjs",
+    "deploy:dev": "wrangler deploy --env dev",
+    "deploy:prod": "wrangler deploy --env production"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

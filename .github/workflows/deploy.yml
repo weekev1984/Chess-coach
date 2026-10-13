@@ -1,0 +1,108 @@
+# Knight School (chess coach): test on every PR, deploy `develop` to dev and `main` to production.
+# Dev and prod are separate Cloudflare Workers (chess-coach-dev and chess-coach).
+# Each GitHub environment (development, production) needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+
+name: Chess Coach
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  deploy-dev:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: ${{ steps.deploy.outputs.url }}
+    concurrency: chess-coach-development
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CI: "1"
+    steps:
+      - name: Check Cloudflare keys
+        if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
+        run: |
+          echo "::notice::Skipping deploy: add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to this GitHub environment (see README.md)."
+          echo "### Not deployed yet" >> "$GITHUB_STEP_SUMMARY"
+          echo "Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to this environment, then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@v4
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+      - uses: actions/setup-node@v4
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+      - name: Deploy
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        id: deploy
+        run: |
+          npx wrangler deploy --env dev | tee deploy.log
+          url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Knight School (development) is live"
+            echo ""
+            echo "Open it: [$url]($url)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-prod:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    concurrency: chess-coach-production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CI: "1"
+    steps:
+      - name: Check Cloudflare keys
+        if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
+        run: |
+          echo "::notice::Skipping deploy: add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to this GitHub environment (see README.md)."
+          echo "### Not deployed yet" >> "$GITHUB_STEP_SUMMARY"
+          echo "Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to this environment, then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@v4
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+      - uses: actions/setup-node@v4
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+      - name: Deploy
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        id: deploy
+        run: |
+          npx wrangler deploy --env production | tee deploy.log
+          url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Knight School (production) is live"
+            echo ""
+            echo "Open it: [$url]($url)"
+          } >> "$GITHUB_STEP_SUMMARY"
