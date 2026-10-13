@@ -1,5 +1,5 @@
 # Knight School (chess coach): test on every PR, deploy `develop` to dev and `main` to production.
-# Dev and prod are separate Cloudflare Workers (chess-coach-dev and chess-coach).
+# Dev and prod are separate Cloudflare Workers (knight-school-dev and knight-school).
 # Each GitHub environment (development, production) needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
 
 name: Chess Coach
