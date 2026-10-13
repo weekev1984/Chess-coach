@@ -254,7 +254,7 @@ function renderMsgs() {
   messages.forEach((m, i) => {
     const d = document.createElement('div');
     d.className = `msg ${m.kind}${i > 0 ? ' old' : ''}`;
-    d.innerHTML = `<span class="tag">${m.tag}</span>${m.html}`;
+    d.innerHTML = plainMoves(`<span class="tag">${m.tag}</span>${m.html}`);
     if (m.acts && i === 0) {
       const a = document.createElement('div'); a.className = 'acts';
       for (const [label, fn, primary] of m.acts) { const b = document.createElement('button'); b.className = 'btn' + (primary ? ' primary' : ''); b.textContent = label; b.onclick = fn; a.appendChild(b); }
@@ -263,7 +263,7 @@ function renderMsgs() {
     el.appendChild(d);
   });
 }
-const sqName = s => `<span class="san">${s}</span>`;
+const sqName = s => `<span class="sqn">${s}</span>`;
 const sanTag = s => `<span class="san">${s}</span>`;
 
 // ---------- Move explanation ----------
@@ -375,7 +375,7 @@ function renderOpening() {
     html += bm.slice(0, 8).map((b, i) => `<button data-bk="${i}"><span class="san">${b.m.san}</span><span class="bn">${b.o.name.replace(/^[^:]*: ?/, '') || b.o.name}</span></button>`).join('');
     html += '</div></div>';
   }
-  card.innerHTML = html;
+  card.innerHTML = plainMoves(html);
   card.querySelectorAll('[data-bk]').forEach(b => b.onclick = () => {
     const x = bm[+b.dataset.bk];
     previewArrow = { from: x.m.from, to: x.m.to, color: 'gold' };
@@ -404,7 +404,7 @@ function renderSheet() {
     for (const j of [i, i + 1]) {
       if (j >= hist.length) { html += '<div></div>'; continue; }
       const cls = [inBookPly(j + 1) ? 'bk' : '', j === hist.length - 1 ? 'cur' : ''].join(' ');
-      html += `<div class="${cls}">${hist[j]}</div>`;
+      html += `<div class="${cls}">${moveWords(hist[j])}</div>`;
     }
   }
   el.innerHTML = html || '<div class="n">1.</div><div class="muted">…</div><div></div>';
@@ -638,11 +638,11 @@ function showLib(i) {
   const o = OPENINGS[i];
   const { fam, info, general } = coachFor(o);
   const moves = o.moves.split(' ');
-  const pretty = moves.map((m, k) => (k % 2 === 0 ? `${k / 2 + 1}.` : '') + m).join(' ');
-  $('lib-detail').innerHTML = `<div class="ocard"><span class="eyebrow">${o.eco} · ${fam}</span><h3>${o.name}</h3><div class="moves">${pretty}</div>
+  const pretty = lineWords(moves.join(' '));
+  $('lib-detail').innerHTML = plainMoves(`<div class="ocard"><span class="eyebrow">${o.eco} · ${fam}</span><h3>${o.name}</h3><div class="moves">${pretty}</div>
     <dl><dt>What is it?</dt><dd>${info ? info.s : general.s}</dd>
     ${info ? `<dt>White's plan</dt><dd>${info.w}</dd><dt>Black's plan</dt><dd>${info.b}</dd><dt>How to counter it</dt><dd class="counter">${info.c}</dd><dt>Coach's tip</dt><dd>${info.t}</dd>` : `<dt>How to play it</dt><dd class="counter">${general.c}</dd>`}</dl>
-    <div class="controls"><button class="btn primary" id="lib-pw">Practice as White</button><button class="btn" id="lib-pb">Practice as Black</button></div></div>`;
+    <div class="controls"><button class="btn primary" id="lib-pw">Practice as White</button><button class="btn" id="lib-pb">Practice as Black</button></div></div>`);
   $('lib-pw').onclick = () => { newGame(moves, 'w'); showTab('tab-coach'); };
   $('lib-pb').onclick = () => { newGame(moves, 'b'); showTab('tab-coach'); };
   $('lib-results').querySelectorAll('button').forEach(b => b.setAttribute('aria-current', +b.dataset.i === i));
@@ -677,7 +677,7 @@ function nextQuiz() {
     mini.appendChild(d);
   }
   const ms = o.moves.split(' ');
-  $('q-moves').textContent = ms.map((m, k) => (k % 2 === 0 ? `${k / 2 + 1}.` : '') + m).join(' ');
+  $('q-moves').textContent = lineWords(ms.join(' '));
   $('q-choices').innerHTML = choices.map(c => `<button>${c}</button>`).join('');
   $('q-choices').querySelectorAll('button').forEach(b => b.onclick = () => answerQuiz(b));
   $('q-feedback').innerHTML = '';
@@ -690,7 +690,7 @@ function answerQuiz(btn) {
   $('q-right').textContent = qs.right; $('q-total').textContent = qs.total; $('q-streak').textContent = qs.streak;
   $('q-choices').querySelectorAll('button').forEach(b => { if (b.textContent === quiz.fam) b.classList.add('right'); else if (b === btn) b.classList.add('wrong'); });
   const info = COACH[quiz.fam];
-  $('q-feedback').innerHTML = `<div class="msg ${ok ? 'good' : 'bad'}"><span class="tag">${ok ? 'Correct!' : 'Not quite'}</span><p>This is the <b>${quiz.o.name}</b> (${quiz.o.eco}).</p><p>${info.s}</p></div>`;
+  $('q-feedback').innerHTML = plainMoves(`<div class="msg ${ok ? 'good' : 'bad'}"><span class="tag">${ok ? 'Correct!' : 'Not quite'}</span><p>This is the <b>${quiz.o.name}</b> (${quiz.o.eco}).</p><p>${info.s}</p></div>`);
 }
 $('q-next').onclick = nextQuiz;
 
@@ -845,7 +845,7 @@ function renderLesson() {
     <div class="ocard"><span class="eyebrow">Exercise ${lesson.ei + 1} of ${L.ex.length}</span><p style="margin:0">${ex.prompt}</p>`;
   if (ex.type === 'line') {
     const moves = game.history();
-    html += `<div class="moves">${moves.map((m, k) => (k % 2 === 0 ? `${k / 2 + 1}.` : '') + m).join(' ') || '…'}</div>`;
+    html += `<div class="moves">${lineWords(moves.join(' ')) || '…'}</div>`;
   }
   if (ex.type === 'choice') {
     html += `<div class="choices">${ex.options.map((o, k) => `<button data-k="${k}" class="${st === 'done' && k === ex.answer ? 'right' : lesson.wrongOpts.includes(k) ? 'wrong' : ''}"${st === 'done' ? ' disabled' : ''}>${o}</button>`).join('')}</div>`;
@@ -860,7 +860,7 @@ function renderLesson() {
     html += `<button class="btn ghost" id="ls-skip">Skip</button>`;
   }
   html += '</div>';
-  el.innerHTML = html;
+  el.innerHTML = plainMoves(html);
   $('ls-back').onclick = () => exitLessonToList();
   el.querySelectorAll('[data-ei]').forEach(b => b.onclick = () => { lesson.ei = +b.dataset.ei; startExercise(); });
   el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => answerChoice(+b.dataset.k));

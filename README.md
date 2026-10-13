@@ -19,6 +19,7 @@ Everything runs in the browser. The Cloudflare Worker serves the static site plu
   public/app.js         board, coaching, hints, library and quiz
   public/engine.js      the coach's chess engine (alpha-beta search), run in a Web Worker
   public/coach.js       kid-friendly notes for each opening family
+  public/notation.js    turns move notation ("Nf3") into plain words ("knight to f3") for beginners
   public/lessons.js     lessons and their exercises (test/lessons.test.js checks every answer with the engine)
   public/openings.json  [ECO, name, moves, position] for every opening
   public/vendor/        chess.js (rules and move notation, BSD-2)

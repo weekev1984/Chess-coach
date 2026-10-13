@@ -145,11 +145,11 @@ select, input[type="search"] { background: var(--surface); border: 1px solid var
 .msg.open { background: var(--accent-soft); border-left-color: var(--accent); } .msg.open .tag { color: var(--ink); }
 .msg.info { border-left-color: var(--ink); }
 .msg.old { opacity: .62; }
-.san { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+.sqn, .san { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
 
 .ocard { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .ocard h3 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; text-wrap: balance; }
-.ocard .moves { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+.ocard .moves { font-size: .9rem; color: var(--muted); overflow-wrap: anywhere; }
 .ocard dl { margin: 0; display: grid; gap: 6px; }
 .ocard dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; }
 .ocard dd { margin: 0; }
@@ -162,7 +162,7 @@ select, input[type="search"] { background: var(--surface); border: 1px solid var
 .muted { color: var(--muted); }
 .small { font-size: .88rem; }
 
-.sheet { font-family: var(--font-mono); font-size: .9rem; display: grid; grid-template-columns: 2.6em 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-height: 240px; overflow-y: auto; }
+.sheet { font-size: .85rem; display: grid; grid-template-columns: 2.6em 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-height: 240px; overflow-y: auto; }
 .sheet div { padding: 3px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .sheet .n { color: var(--muted); background: var(--surface-2); text-align: right; }
 .sheet .bk { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 3px; }
