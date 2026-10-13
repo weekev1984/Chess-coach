@@ -59,7 +59,7 @@ jobs:
           npx wrangler deploy --env dev 2>&1 | tee deploy.log
           url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
           # Show what Cloudflare said, and fail loudly if the site didn't get a web address
-          while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -25)
+          while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -8)
           if [ -z "$url" ]; then echo "::error::Deployed, but Cloudflare didn't report a workers.dev address. See the wrangler notices above."; exit 1; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
@@ -104,7 +104,7 @@ jobs:
           npx wrangler deploy --env production 2>&1 | tee deploy.log
           url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
           # Show what Cloudflare said, and fail loudly if the site didn't get a web address
-          while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -25)
+          while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -8)
           if [ -z "$url" ]; then echo "::error::Deployed, but Cloudflare didn't report a workers.dev address. See the wrangler notices above."; exit 1; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
