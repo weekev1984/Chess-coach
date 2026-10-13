@@ -38,7 +38,9 @@ Everything runs in the browser. The Cloudflare Worker serves the static site plu
 
 Non-production environments show a striped banner so you always know which one you're in.
 
-Every pull request runs the tests. Pushing to `develop` tests and deploys dev, and merging to `main` does the same for production. ## One-time setup
+Every pull request runs the tests. Pushing to `develop` tests and deploys dev, and merging to `main` does the same for production.
+
+## One-time setup
 
 In this repo's Settings → Environments, create `development` and `production`, and add these secrets to each (the same values the Recipe App uses):
 
