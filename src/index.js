@@ -4,7 +4,7 @@ export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     if (pathname === "/api/health") {
-      return Response.json({ ok: true, environment: env.APP_ENV || "local" }, { headers: { "cache-control": "no-store" } });
+      return Response.json({ ok: true, environment: env.APP_ENV || "production" }, { headers: { "cache-control": "no-store" } });
     }
     return env.ASSETS.fetch(request);
   },

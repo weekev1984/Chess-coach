@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Knight School: play chess against a coach that names and explains every opening.",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --var APP_ENV:local",
     "test": "node --test test/*.test.js",
     "openings": "node scripts/build-openings.mjs",
     "deploy:dev": "wrangler deploy --env dev",
