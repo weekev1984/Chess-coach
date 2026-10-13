@@ -56,10 +56,11 @@ jobs:
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         id: deploy
         run: |
-          npx wrangler deploy --env dev 2>&1 | tee deploy.log
+          npx wrangler deploy --env dev 2>&1 | tee deploy.log; status=${PIPESTATUS[0]}
           url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
           # Show what Cloudflare said, and fail loudly if the site didn't get a web address
           while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -8)
+          if [ "$status" -ne 0 ]; then echo "::error::Cloudflare rejected the deploy. See the wrangler notices above."; exit "$status"; fi
           if [ -z "$url" ]; then echo "::error::Deployed, but Cloudflare didn't report a workers.dev address. See the wrangler notices above."; exit 1; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
@@ -101,10 +102,11 @@ jobs:
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
         id: deploy
         run: |
-          npx wrangler deploy --env production 2>&1 | tee deploy.log
+          npx wrangler deploy --env production 2>&1 | tee deploy.log; status=${PIPESTATUS[0]}
           url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
           # Show what Cloudflare said, and fail loudly if the site didn't get a web address
           while IFS= read -r line; do [ -n "$line" ] && echo "::notice title=wrangler::$line"; done < <(grep -vE '^\s*$|^[─╭╰│⛅]' deploy.log | tail -8)
+          if [ "$status" -ne 0 ]; then echo "::error::Cloudflare rejected the deploy. See the wrangler notices above."; exit "$status"; fi
           if [ -z "$url" ]; then echo "::error::Deployed, but Cloudflare didn't report a workers.dev address. See the wrangler notices above."; exit 1; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
